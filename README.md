@@ -1,188 +1,208 @@
 # Amazon Sales Suite
 
-A comprehensive dashboard for Amazon sellers to track sales, manage inventory, and analyze performance using the Amazon Selling Partner API.
+A comprehensive analytics and reporting platform for Amazon sellers, built with Flask and the Amazon Selling Partner API.
 
 ## Features
 
-- 📊 Interactive Dashboard with sales trends and metrics
-- 📦 Product management and tracking
-- 📈 Detailed sales reports and analytics
-- 📱 Mobile-responsive design
-- 🔄 Real-time data synchronization with Amazon
+### Dashboard
+- Overview of total products, sales, and revenue
+- Sales trends visualization
+- Top performing products list
+
+### Product Management
+- List and search products
+- View detailed product information
+- Track product performance metrics
+- Advanced analytics for each product:
+  - Competitor price tracking and analysis
+  - Profit margin calculations and trends
+  - Keyword performance monitoring
+
+### Analytics
+#### Competitor Analysis
+- Market position visualization
+- Price history tracking
+- Price change alerts
+- Competitor offer monitoring
+
+#### Profit Analysis
+- Profit margin trends
+- Cost breakdown visualization
+- Performance metrics
+- Revenue analysis
+
+#### Keyword Performance
+- Keyword ranking trends
+- Top performing keywords
+- Keyword health metrics
+- Optimization opportunities
+- CTR and ACOS tracking
+
+### Reports
+- Generate and manage various report types:
+  - Sales reports
+  - Order reports
+  - Inventory reports
+- Download reports in multiple formats
+- Schedule automated report generation
 
 ## Prerequisites
 
-Before you begin, ensure you have:
-1. Python 3.8 or higher installed
-2. An Amazon Seller account
-3. Amazon Selling Partner API credentials
-
-### Required Amazon Credentials
-You'll need the following from your Amazon Seller account:
-- Refresh Token
-- Client ID
-- Client Secret
-- AWS Access Key
-- AWS Secret Key
-- Role ARN
-- Marketplace ID
+- Python 3.8 or higher
+- Amazon Seller Account
+- Amazon Selling Partner API credentials:
+  - Client ID
+  - Client Secret
+  - Refresh Token
+  - AWS Access Key
+  - AWS Secret Key
+  - Role ARN
+  - Marketplace ID
 
 ## Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/salessuite.git
-   cd salessuite
-   ```
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/amazon-sales-suite.git
+cd amazon-sales-suite
+```
 
-2. **Create a virtual environment**
-   ```bash
-   python -m venv venv
-   ```
+2. Create and activate a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
 
-3. **Activate the virtual environment**
-   - On Windows:
-     ```bash
-     venv\Scripts\activate
-     ```
-   - On macOS/Linux:
-     ```bash
-     source venv/bin/activate
-     ```
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-4. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+4. Set up environment variables:
+Create a `.env` file in the project root with the following variables:
+```
+FLASK_APP=run.py
+FLASK_ENV=development
+SECRET_KEY=your-secret-key
+DATABASE_URL=sqlite:///app.db
 
-5. **Set up environment variables**
-   Create a file named `.env` in the project root with the following content:
-   ```
-   SECRET_KEY=your-secret-key
-   AMAZON_REFRESH_TOKEN=your-refresh-token
-   AMAZON_CLIENT_ID=your-client-id
-   AMAZON_CLIENT_SECRET=your-client-secret
-   AMAZON_AWS_ACCESS_KEY=your-aws-access-key
-   AMAZON_AWS_SECRET_KEY=your-aws-secret-key
-   AMAZON_ROLE_ARN=your-role-arn
-   AMAZON_MARKETPLACE_ID=your-marketplace-id
-   ```
+# Amazon SP-API Credentials
+AMAZON_CLIENT_ID=your-client-id
+AMAZON_CLIENT_SECRET=your-client-secret
+AMAZON_REFRESH_TOKEN=your-refresh-token
+AMAZON_AWS_ACCESS_KEY=your-aws-access-key
+AMAZON_AWS_SECRET_KEY=your-aws-secret-key
+AMAZON_ROLE_ARN=your-role-arn
+AMAZON_MARKETPLACE_ID=your-marketplace-id
+```
 
-6. **Initialize the database**
-   ```bash
-   flask db init
-   flask db migrate -m "Initial migration"
-   flask db upgrade
-   ```
+5. Initialize the database:
+```bash
+flask db upgrade
+```
 
-## Running the Application
+## Usage
 
-1. **Start the application**
-   ```bash
-   flask run
-   ```
+1. Start the development server:
+```bash
+flask run
+```
 
-2. **Access the dashboard**
-   Open your web browser and go to:
-   ```
-   http://localhost:5000
-   ```
+2. Access the application at `http://localhost:5000`
 
-## Using the Dashboard
+### Key Features Usage
 
-### Dashboard Overview
-The main dashboard provides:
-- Total number of products
-- Total sales count
-- 30-day revenue
-- Sales trends
-- Top performing products
+#### Product Analytics
+1. Navigate to the Products page
+2. Click the "Analytics" button next to any product
+3. View detailed analytics in three main sections:
+   - Competitors: Track market position and price changes
+   - Profit Analysis: Monitor margins and costs
+   - Keywords: Analyze search performance
 
-### Products Section
-1. Click "Products" in the navigation bar
-2. View all your products in a table format
-3. Use the search bar to find specific products
-4. Click the eye icon to view detailed product information
-5. Click the chart icon to view product-specific reports
-
-### Reports Section
-1. Click "Reports" in the navigation bar
-2. Create new reports:
-   - Click "New Report"
-   - Select report type (Sales, Orders, or Inventory)
-   - Choose date range
-   - Click "Create Report"
-3. View existing reports:
-   - Use filters to find specific reports
-   - Click the eye icon to view report details
-   - Click the download icon to export reports
-   - Click the trash icon to delete reports
-
-## Common Tasks
-
-### Creating a Sales Report
+#### Reports
 1. Go to the Reports page
-2. Click "New Report"
-3. Fill in the form:
-   - Name: "Monthly Sales Report"
-   - Type: "Sales"
-   - Start Date: Choose start date
-   - End Date: Choose end date
-4. Click "Create Report"
+2. Click "Create Report"
+3. Select report type and date range
+4. Generate and download reports
 
-### Viewing Product Performance
-1. Go to the Products page
-2. Find your product using the search bar
-3. Click the eye icon to view:
-   - Total sales
-   - Revenue
-   - Sales history
+## API Endpoints
 
-### Exporting Data
-1. Go to the Reports page
-2. Find the report you want to export
-3. Click the download icon
-4. Choose your preferred format
+### Products
+- `GET /api/products/<asin>` - Get product details
+- `GET /api/products/<product_id>/competitors` - Get competitor analysis
+- `GET /api/products/<product_id>/profit` - Get profit analysis
+- `GET /api/products/<product_id>/keywords` - Get keyword analysis
+- `POST /api/products/<product_id>/track` - Start tracking product metrics
 
-## Troubleshooting
+### Reports
+- `GET /api/reports` - List all reports
+- `POST /api/reports` - Create new report
+- `GET /api/reports/<report_id>` - Get report details
+- `DELETE /api/reports/<report_id>` - Delete report
 
-### Common Issues
+### Sales
+- `GET /api/sales` - Get sales data with date range filter
 
-1. **Application won't start**
-   - Check if the virtual environment is activated
-   - Verify all dependencies are installed
-   - Ensure the `.env` file exists with correct credentials
+## Development
 
-2. **No data showing**
-   - Verify Amazon API credentials
-   - Check internet connection
-   - Ensure you have active listings on Amazon
+### Project Structure
+```
+amazon-sales-suite/
+├── app/
+│   ├── models/         # Database models
+│   ├── routes/         # API and view routes
+│   ├── services/       # Business logic and API services
+│   ├── templates/      # HTML templates
+│   └── static/         # CSS, JS, and other static files
+├── migrations/         # Database migrations
+├── tests/             # Test files
+├── .env               # Environment variables
+├── config.py          # Configuration
+├── requirements.txt   # Dependencies
+└── run.py            # Application entry point
+```
 
-3. **Database errors**
-   - Run `flask db upgrade` to ensure database is up to date
-   - Check if the database file exists
+### Running Tests
+```bash
+python -m pytest
+```
 
-### Getting Help
+### Database Migrations
+```bash
+flask db migrate -m "Migration message"
+flask db upgrade
+```
 
-If you encounter any issues:
-1. Check the error message in the terminal
-2. Verify your Amazon API credentials
-3. Ensure all environment variables are set correctly
+## Contributing
 
-## Security Notes
-
-- Never share your `.env` file
-- Keep your Amazon API credentials secure
-- Regularly update your dependencies
-- Use strong passwords for any authentication
-
-## Support
-
-For additional help:
-1. Check the documentation
-2. Review the Amazon Selling Partner API documentation
-3. Contact support with specific error messages
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Security
+
+- Never commit sensitive credentials to version control
+- Keep your `.env` file secure and out of version control
+- Regularly rotate your Amazon SP-API credentials
+- Monitor API usage and set up alerts for unusual activity
+
+## Support
+
+For support, please open an issue in the GitHub repository or contact the maintainers.
+
+## Roadmap
+
+- [ ] Enhanced competitor analysis with market share tracking
+- [ ] Advanced keyword research and optimization suggestions
+- [ ] Automated price optimization
+- [ ] Inventory forecasting
+- [ ] Custom report builder
+- [ ] Email notifications for important alerts
+- [ ] Mobile app for monitoring on the go
