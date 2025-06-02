@@ -1,0 +1,360 @@
+{% extends "base.html" %}
+
+{% block title %}Product Analytics - {{ product.title }}{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Product Analytics: {{ product.title }}</h1>
+    
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs mb-4" id="analyticsTabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="competitors-tab" data-bs-toggle="tab" href="#competitors" role="tab">
+                <i class="fas fa-chart-line"></i> Competitors
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="profit-tab" data-bs-toggle="tab" href="#profit" role="tab">
+                <i class="fas fa-dollar-sign"></i> Profit Analysis
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="keywords-tab" data-bs-toggle="tab" href="#keywords" role="tab">
+                <i class="fas fa-key"></i> Keywords
+            </a>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="analyticsTabsContent">
+        <!-- Competitors Tab -->
+        <div class="tab-pane fade show active" id="competitors" role="tabpanel">
+            <div class="row">
+                <!-- Market Position Card -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Market Position</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="marketPositionChart"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Price Alerts Card -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Price Alerts</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="priceAlertsList"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Price History Chart -->
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Price History</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="priceHistoryChart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profit Analysis Tab -->
+        <div class="tab-pane fade" id="profit" role="tabpanel">
+            <div class="row">
+                <!-- Profit Trends Chart -->
+                <div class="col-md-8 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Profit Trends</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="profitTrendsChart"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Metrics Card -->
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Performance Metrics</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="performanceMetrics"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cost Breakdown Chart -->
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Cost Breakdown</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="costBreakdownChart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Keywords Tab -->
+        <div class="tab-pane fade" id="keywords" role="tabpanel">
+            <div class="row">
+                <!-- Keyword Trends Chart -->
+                <div class="col-md-8 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Keyword Trends</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="keywordTrendsChart"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Keyword Health Card -->
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Keyword Health</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="keywordHealth"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Keywords Table -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Top Keywords</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="topKeywordsTable"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Opportunities Card -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Keyword Opportunities</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="keywordOpportunities"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+<script>
+// Initialize data fetching
+document.addEventListener('DOMContentLoaded', function() {
+    const productId = {{ product.id }};
+    
+    // Fetch competitor data
+    fetch(`/api/products/${productId}/competitors`)
+        .then(response => response.json())
+        .then(data => {
+            updateCompetitorCharts(data);
+        });
+
+    // Fetch profit data
+    fetch(`/api/products/${productId}/profit`)
+        .then(response => response.json())
+        .then(data => {
+            updateProfitCharts(data);
+        });
+
+    // Fetch keyword data
+    fetch(`/api/products/${productId}/keywords`)
+        .then(response => response.json())
+        .then(data => {
+            updateKeywordCharts(data);
+        });
+});
+
+// Update competitor charts
+function updateCompetitorCharts(data) {
+    // Market Position Chart
+    new Chart(document.getElementById('marketPositionChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Average', 'Lowest', 'Highest'],
+            datasets: [{
+                label: 'Price',
+                data: [
+                    data.market_position.average_market_price,
+                    data.market_position.lowest_price,
+                    data.market_position.highest_price
+                ]
+            }]
+        }
+    });
+
+    // Price History Chart
+    new Chart(document.getElementById('priceHistoryChart'), {
+        type: 'line',
+        data: {
+            labels: data.history.map(h => new Date(h.timestamp).toLocaleDateString()),
+            datasets: [{
+                label: 'Price',
+                data: data.history.map(h => h.price)
+            }]
+        }
+    });
+
+    // Price Alerts List
+    const alertsList = document.getElementById('priceAlertsList');
+    data.alerts.forEach(alert => {
+        const alertElement = document.createElement('div');
+        alertElement.className = 'alert alert-warning';
+        alertElement.innerHTML = `
+            <strong>${alert.competitor_asin}</strong>: 
+            Price changed by ${(alert.price_change * 100).toFixed(1)}%
+            (${alert.old_price} → ${alert.new_price})
+        `;
+        alertsList.appendChild(alertElement);
+    });
+}
+
+// Update profit charts
+function updateProfitCharts(data) {
+    // Profit Trends Chart
+    new Chart(document.getElementById('profitTrendsChart'), {
+        type: 'line',
+        data: {
+            labels: data.trends.map(t => new Date(t.date).toLocaleDateString()),
+            datasets: [{
+                label: 'Margin %',
+                data: data.trends.map(t => t.margin_percentage)
+            }]
+        }
+    });
+
+    // Cost Breakdown Chart
+    new Chart(document.getElementById('costBreakdownChart'), {
+        type: 'pie',
+        data: {
+            labels: ['Amazon Fees', 'Shipping', 'Product Cost', 'Storage', 'Advertising', 'Returns'],
+            datasets: [{
+                data: [
+                    data.trends[0].amazon_fees,
+                    data.trends[0].shipping_cost,
+                    data.trends[0].product_cost,
+                    data.trends[0].storage_fees,
+                    data.trends[0].advertising_cost,
+                    data.trends[0].returns_cost
+                ]
+            }]
+        }
+    });
+
+    // Performance Metrics
+    const metricsDiv = document.getElementById('performanceMetrics');
+    metricsDiv.innerHTML = `
+        <div class="list-group">
+            <div class="list-group-item">
+                <h6>Average Margin</h6>
+                <p class="mb-0">${data.performance.average_margin.toFixed(1)}%</p>
+            </div>
+            <div class="list-group-item">
+                <h6>Total Profit</h6>
+                <p class="mb-0">$${data.performance.total_profit.toFixed(2)}</p>
+            </div>
+        </div>
+    `;
+}
+
+// Update keyword charts
+function updateKeywordCharts(data) {
+    // Keyword Trends Chart
+    new Chart(document.getElementById('keywordTrendsChart'), {
+        type: 'line',
+        data: {
+            labels: data.trends.map(t => new Date(t.date).toLocaleDateString()),
+            datasets: [{
+                label: 'Rank',
+                data: data.trends.map(t => t.rank)
+            }]
+        }
+    });
+
+    // Top Keywords Table
+    const tableDiv = document.getElementById('topKeywordsTable');
+    tableDiv.innerHTML = `
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Keyword</th>
+                    <th>Conversions</th>
+                    <th>CTR</th>
+                    <th>ACOS</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${data.top_keywords.map(k => `
+                    <tr>
+                        <td>${k.keyword}</td>
+                        <td>${k.conversions}</td>
+                        <td>${(k.ctr * 100).toFixed(1)}%</td>
+                        <td>${(k.acos * 100).toFixed(1)}%</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+
+    // Keyword Health
+    const healthDiv = document.getElementById('keywordHealth');
+    healthDiv.innerHTML = `
+        <div class="list-group">
+            <div class="list-group-item">
+                <h6>Total Keywords</h6>
+                <p class="mb-0">${data.health.total_keywords}</p>
+            </div>
+            <div class="list-group-item">
+                <h6>Average Rank</h6>
+                <p class="mb-0">${data.health.average_rank.toFixed(1)}</p>
+            </div>
+            <div class="list-group-item">
+                <h6>Average CTR</h6>
+                <p class="mb-0">${(data.health.average_ctr * 100).toFixed(1)}%</p>
+            </div>
+        </div>
+    `;
+
+    // Keyword Opportunities
+    const opportunitiesDiv = document.getElementById('keywordOpportunities');
+    opportunitiesDiv.innerHTML = data.opportunities.map(o => `
+        <div class="alert alert-info">
+            <strong>${o.keyword}</strong>: ${o.suggestion}
+        </div>
+    `).join('');
+}
+</script>
+{% endblock %} 

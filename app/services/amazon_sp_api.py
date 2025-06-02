@@ -1,9 +1,11 @@
-from sp_api.api import Reports, Orders, Catalog
+from sp_api.api import Reports, Orders, Catalog, Products
 from sp_api.base import Marketplaces
 from datetime import datetime, timedelta
 from flask import current_app
 import pandas as pd
 import json
+from app import db
+from app.models import Product, Sale, Report
 
 class AmazonSPAPIService:
     def __init__(self):
@@ -19,6 +21,7 @@ class AmazonSPAPIService:
         self.reports_api = Reports(credentials=self.credentials)
         self.orders_api = Orders(credentials=self.credentials)
         self.catalog_api = Catalog(credentials=self.credentials)
+        self.marketplace = Marketplaces.US  # Default to US marketplace
 
     def get_sales_report(self, start_date, end_date):
         """Fetch sales report for the specified date range"""
@@ -135,4 +138,78 @@ class AmazonSPAPIService:
             return response.payload
         except Exception as e:
             current_app.logger.error(f"Error listing reports: {str(e)}")
-            return None 
+            return None
+
+    def get_competing_offers(self, asin: str):
+        """Get competing offers for a product."""
+        try:
+            products_api = Products(credentials=self.credentials, marketplace=self.marketplace)
+            response = products_api.get_competitive_pricing_for_asin(asin)
+            
+            if not response.payload:
+                return []
+
+            offers = []
+            for item in response.payload:
+                if 'Product' in item and 'CompetitivePricing' in item['Product']:
+                    for offer in item['Product']['CompetitivePricing'].get('CompetitivePrices', []):
+                        if 'Price' in offer:
+                            offers.append({
+                                'asin': item['Product']['Identifiers']['MarketplaceASIN']['ASIN'],
+                                'price': float(offer['Price']['LandedPrice']['Amount']),
+                                'shipping_price': float(offer['Price'].get('Shipping', {}).get('Amount', 0)),
+                                'is_prime': offer.get('condition', '') == 'New',
+                                'is_fba': 'FBA' in offer.get('fulfillmentChannel', ''),
+                                'condition': offer.get('condition', 'New')
+                            })
+            return offers
+        except Exception as e:
+            print(f"Error getting competing offers: {str(e)}")
+            return []
+
+    def get_keyword_performance(self, asin: str, keyword: str):
+        """Get keyword performance data for a product."""
+        try:
+            # This would typically use Amazon's Advertising API
+            # For now, we'll simulate the data
+            return {
+                'rank': self._simulate_rank(),
+                'impressions': self._simulate_impressions(),
+                'clicks': self._simulate_clicks(),
+                'conversions': self._simulate_conversions(),
+                'ctr': self._simulate_ctr(),
+                'acos': self._simulate_acos()
+            }
+        except Exception as e:
+            print(f"Error getting keyword performance: {str(e)}")
+            return {}
+
+    def _simulate_rank(self):
+        """Simulate keyword rank (1-100)."""
+        import random
+        return random.randint(1, 100)
+
+    def _simulate_impressions(self):
+        """Simulate impressions (100-10000)."""
+        import random
+        return random.randint(100, 10000)
+
+    def _simulate_clicks(self):
+        """Simulate clicks (10-1000)."""
+        import random
+        return random.randint(10, 1000)
+
+    def _simulate_conversions(self):
+        """Simulate conversions (1-100)."""
+        import random
+        return random.randint(1, 100)
+
+    def _simulate_ctr(self):
+        """Simulate CTR (0.01-0.1)."""
+        import random
+        return random.uniform(0.01, 0.1)
+
+    def _simulate_acos(self):
+        """Simulate ACOS (0.1-0.4)."""
+        import random
+        return random.uniform(0.1, 0.4) 

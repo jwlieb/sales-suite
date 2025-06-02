@@ -1,7 +1,10 @@
 from flask import Blueprint, jsonify, request, current_app
-from ..models import Product, Sale, Report
+from ..models import Product, Sale, Report, CompetitorPrice, ProfitMargin, KeywordPerformance
 from ..services.amazon_sp_api import AmazonSPAPIService
 from ..services.report_processor import ReportProcessor
+from ..services.competitor_tracker import CompetitorTracker
+from ..services.profit_calculator import ProfitCalculator
+from ..services.keyword_tracker import KeywordTracker
 from .. import db
 from datetime import datetime
 
@@ -129,4 +132,116 @@ def get_product(asin):
         'title': product.title,
         'total_sales': len(product.sales),
         'total_revenue': sum(sale.revenue for sale in product.sales)
+    })
+
+@bp.route('/products/<int:product_id>/competitors', methods=['GET'])
+def get_competitors(product_id):
+    """Get competitor information for a product."""
+    product = Product.query.get_or_404(product_id)
+    tracker = CompetitorTracker(AmazonSPAPIService({}))  # Pass your credentials here
+    
+    # Get market position
+    market_position = tracker.get_market_position(product_id)
+    
+    # Get price alerts
+    alerts = tracker.get_price_alerts(product_id)
+    
+    # Get price history
+    history = tracker.get_price_history(product_id)
+    
+    return jsonify({
+        'market_position': market_position,
+        'alerts': alerts,
+        'history': [{
+            'competitor_asin': p.competitor_asin,
+            'price': p.price,
+            'timestamp': p.timestamp.isoformat(),
+            'is_prime': p.is_prime,
+            'is_fba': p.is_fba
+        } for p in history]
+    })
+
+@bp.route('/products/<int:product_id>/profit', methods=['GET'])
+def get_profit_analysis(product_id):
+    """Get profit analysis for a product."""
+    product = Product.query.get_or_404(product_id)
+    calculator = ProfitCalculator(AmazonSPAPIService({}))  # Pass your credentials here
+    
+    # Get profit trends
+    trends = calculator.get_profit_trends(product_id)
+    
+    # Get overall performance
+    performance = calculator.get_product_performance(product_id)
+    
+    return jsonify({
+        'trends': [{
+            'date': t.date.isoformat(),
+            'margin_percentage': t.margin_percentage,
+            'net_profit': t.net_profit,
+            'total_costs': t.amazon_fees + t.shipping_cost + t.product_cost + 
+                          t.storage_fees + t.advertising_cost + t.returns_cost
+        } for t in trends],
+        'performance': performance
+    })
+
+@bp.route('/products/<int:product_id>/keywords', methods=['GET'])
+def get_keyword_analysis(product_id):
+    """Get keyword analysis for a product."""
+    product = Product.query.get_or_404(product_id)
+    tracker = KeywordTracker(AmazonSPAPIService({}))  # Pass your credentials here
+    
+    # Get keyword trends
+    trends = tracker.get_keyword_trends(product_id)
+    
+    # Get top keywords
+    top_keywords = tracker.get_top_keywords(product_id)
+    
+    # Get opportunities
+    opportunities = tracker.get_keyword_opportunities(product_id)
+    
+    # Get keyword health
+    health = tracker.get_keyword_health(product_id)
+    
+    return jsonify({
+        'trends': [{
+            'keyword': t.keyword,
+            'date': t.date.isoformat(),
+            'rank': t.search_rank,
+            'impressions': t.impressions,
+            'clicks': t.clicks,
+            'conversions': t.conversions,
+            'ctr': t.ctr,
+            'acos': t.acos
+        } for t in trends],
+        'top_keywords': [{
+            'keyword': k.keyword,
+            'conversions': k.conversions,
+            'ctr': k.ctr,
+            'acos': k.acos
+        } for k in top_keywords],
+        'opportunities': opportunities,
+        'health': health
+    })
+
+@bp.route('/products/<int:product_id>/track', methods=['POST'])
+def track_product(product_id):
+    """Start tracking a product's competitors, profits, and keywords."""
+    product = Product.query.get_or_404(product_id)
+    
+    # Initialize services
+    sp_api = AmazonSPAPIService({})  # Pass your credentials here
+    competitor_tracker = CompetitorTracker(sp_api)
+    profit_calculator = ProfitCalculator(sp_api)
+    keyword_tracker = KeywordTracker(sp_api)
+    
+    # Track everything
+    competitor_success = competitor_tracker.track_competitor_prices(product)
+    profit_success = profit_calculator.calculate_profit_margin(product) is not None
+    keyword_success = keyword_tracker.track_keyword_performance(product)
+    
+    return jsonify({
+        'success': all([competitor_success, profit_success, keyword_success]),
+        'competitor_tracking': competitor_success,
+        'profit_tracking': profit_success,
+        'keyword_tracking': keyword_success
     }) 

@@ -28,4 +28,9 @@ def reports():
 @bp.route('/products')
 def products():
     products = Product.query.all()
-    return render_template('products.html', products=products) 
+    return render_template('products.html', products=products)
+
+@bp.route('/products/<int:product_id>/analytics')
+def product_analytics(product_id):
+    product = Product.query.get_or_404(product_id)
+    return render_template('product_analytics.html', product=product) 

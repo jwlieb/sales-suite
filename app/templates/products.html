@@ -33,12 +33,17 @@
                         <td>{{ product.sales|length }}</td>
                         <td>${{ "%.2f"|format(product.sales|sum(attribute='revenue')) }}</td>
                         <td>
-                            <button class="btn btn-sm btn-outline-primary" onclick="viewProduct('{{ product.asin }}')">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-info" onclick="viewReport('{{ product.asin }}')">
-                                <i class="fas fa-chart-bar"></i>
-                            </button>
+                            <div class="btn-group">
+                                <a href="{{ url_for('views.product_detail', product_id=product.id) }}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                <a href="{{ url_for('views.product_analytics', product_id=product.id) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-chart-line"></i> Analytics
+                                </a>
+                                <button class="btn btn-sm btn-danger" onclick="deleteProduct('{{ product.id }}')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
