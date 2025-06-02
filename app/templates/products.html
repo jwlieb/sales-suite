@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Products - Sales Suite{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Products</h5>
+        <div class="input-group" style="width: 300px;">
+            <input type="text" class="form-control" placeholder="Search products..." id="productSearch">
+            <button class="btn btn-outline-secondary" type="button">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ASIN</th>
+                        <th>Title</th>
+                        <th>Total Sales</th>
+                        <th>Revenue</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>{{ product.asin }}</td>
+                        <td>{{ product.title }}</td>
+                        <td>{{ product.sales|length }}</td>
+                        <td>${{ "%.2f"|format(product.sales|sum(attribute='revenue')) }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="viewProduct('{{ product.asin }}')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-info" onclick="viewReport('{{ product.asin }}')">
+                                <i class="fas fa-chart-bar"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Product Details Modal -->
+<div class="modal fade" id="productModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Product Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="productDetails">
+                    <!-- Content will be loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function viewProduct(asin) {
+    // Fetch and display product details
+    fetch(`/api/products/${asin}`)
+        .then(response => response.json())
+        .then(data => {
+            const modal = new bootstrap.Modal(document.getElementById('productModal'));
+            document.getElementById('productDetails').innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Product Information</h6>
+                        <p><strong>ASIN:</strong> ${data.asin}</p>
+                        <p><strong>Title:</strong> ${data.title}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Sales Statistics</h6>
+                        <p><strong>Total Sales:</strong> ${data.total_sales}</p>
+                        <p><strong>Total Revenue:</strong> $${data.total_revenue.toFixed(2)}</p>
+                    </div>
+                </div>
+            `;
+            modal.show();
+        });
+}
+
+function viewReport(asin) {
+    // Redirect to product report page
+    window.location.href = `/reports/product/${asin}`;
+}
+
+// Search functionality
+document.getElementById('productSearch').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}
